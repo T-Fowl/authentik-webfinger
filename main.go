@@ -13,11 +13,11 @@ import (
 )
 
 type WebFingerClient struct {
-	client    *api.APIClient
-	IssuerUrl string
+	client      *api.APIClient
+	Application string
 }
 
-func NewWebFingerClient(host string, token string, userAgent string, issuerUrl string) WebFingerClient {
+func NewWebFingerClient(host string, token string, userAgent string, application string) WebFingerClient {
 	cfg := api.NewConfiguration()
 	//cfg.Debug = true
 	cfg.Host = host
@@ -27,7 +27,7 @@ func NewWebFingerClient(host string, token string, userAgent string, issuerUrl s
 
 	client := api.NewAPIClient(cfg)
 
-	return WebFingerClient{client: client, IssuerUrl: issuerUrl}
+	return WebFingerClient{client: client, Application: application}
 }
 
 type WebFingerResource struct {
@@ -69,8 +69,24 @@ func (wf *WebFingerClient) PokeAccount(account string) (*WebFingerResource, erro
 		Links: []Link{
 			{
 				Rel:  "http://openid.net/specs/connect/1.0/issuer",
-				Href: wf.IssuerUrl,
+				Href: fmt.Sprintf("https://%s/application/o/%s/", wf.client.GetConfig().Host, wf.Application),
 			},
+			//{
+			//	Rel:  "authorization_endpoint",
+			//	Href: fmt.Sprintf("https://%s/application/o/%s/oauth2/authorize", wf.client.GetConfig().Host, wf.Application),
+			//},
+			//{
+			//	Rel:  "token_endpoint",
+			//	Href: fmt.Sprintf("https://%s/application/o/%s/oauth2/token", wf.client.GetConfig().Host, wf.Application),
+			//},
+			//{
+			//	Rel: "userinfo_endpoint",
+			//	Href: fmt.Sprintf("https://%s/application/o/%s/userinfo", wf.client.GetConfig().Host, wf.Application),
+			//},
+			//{
+			//	Rel: "jwks_uri",
+			//	Href: fmt.Sprintf("https://%s/application/o/%s/jwks", wf.client.GetConfig().Host, wf.Application),
+			//},
 			{
 				Rel:  "http://webfinger.net/rel/avatar",
 				Href: user.Avatar,
@@ -80,11 +96,11 @@ func (wf *WebFingerClient) PokeAccount(account string) (*WebFingerResource, erro
 }
 
 type config struct {
-	Host          string
-	AuthentikHost string
-	Token         string
-	UserAgent     string
-	IssuerUrl     string
+	Host                 string
+	AuthentikHost        string
+	Token                string
+	UserAgent            string
+	AuthentikApplication string
 }
 
 func readConfig() (*config, error) {
@@ -133,7 +149,7 @@ func main() {
 		cfg.AuthentikHost,
 		cfg.Token,
 		cfg.UserAgent,
-		cfg.IssuerUrl,
+		cfg.AuthentikApplication,
 	)
 
 	http.HandleFunc("GET /.well-known/webfinger", func(writer http.ResponseWriter, request *http.Request) {
@@ -168,7 +184,8 @@ func main() {
 			return
 		}
 
-		writer.Header().Set("Content-Type", "application/json")
+		writer.Header().Set("Content-Type", "application/jrd+json")
+		writer.Header().Set("Access-Control-Allow-Origin", "*")
 		writer.WriteHeader(http.StatusOK)
 		writer.Write(bytes)
 	})
