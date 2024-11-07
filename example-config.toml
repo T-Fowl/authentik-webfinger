@@ -1,0 +1,5 @@
+Host = ":8080"
+AuthentikHost = "authentik.example.com"
+Token = "changeme"
+UserAgent = "tfowl/authentik-webfinger (https://github.com/T-Fowl/authentik-webfinger)"
+IssuerUrl = "https://authentik.example.com/application/o/tailscale/"
